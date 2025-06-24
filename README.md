@@ -1,3 +1,3 @@
 # Index
 
-* [Chapter 1: Y Combinator](y-combinator-tutorial/chapter-01-y-combinator.md)
+* [Chapter 1: Y Combinator](chapter-01-y-combinator.md)
