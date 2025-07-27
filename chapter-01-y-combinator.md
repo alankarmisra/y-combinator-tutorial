@@ -1,20 +1,233 @@
 ---
 title: "The Y-combinator"
 ---
-# The Y-combinator
 
-## History
+# The Y-Combinator: Making Any Function Recursive
 
-The ```Y-combinator``` comes out of ```lambda calculus``` which I will refer to as ```λ-calculus``` a notation I just invented in a fit of creativity. λ-calculus was an early attempt to understand how computation works just by using functions. Mind you, this was the 1930's. We didn't have digital computers then so it takes a very curious / bored mind to go scurrying into what ```computation``` really means. Our hero is Alonzo Church who did the ground work. Later regular people like Haskell Curry explored what you could do with it. I joke, of course. Mr. Curry is no regular people. He has a language named after him. It's called, wait for it... ```Haskell```.
+Imagine you have a blueprint for a function, but there's one problem: it can't call itself. How do you make it recursive? That's where the Y-combinator comes in!
 
-The idea that we can define everything that is computable with functions and parameters might seem obvious in the modern world, but in the days of paper and pencil (and an occasional pen if you were to get too adventurous), it was considered a breakthrough. Let's acknowledge the contributions of Mr. Church and Mr. Curry here, but also agree that a lot of this might seem obvious to us at this point and that's ok. We don't have to marvel at electricity each time we discuss something digital. Electricity is great, we get it. So is ```Y-combinator```. But we should at least have some familiarity with it for history sake - and we can thence proceed to never deal with it again, at least not directly, except in some very specific cases. 
+## The Magic Formula
 
-## What is the λ-calculus
+```javascript
+const Y = blueprint => 
+  (clone => blueprint(clone(clone)))
+  (clone => blueprint(clone(clone)))
+```
+
+This might look mysterious, but it's actually quite elegant. Let's break it down:
+
+- `blueprint` - This is ANY function you want to make recursive
+- `clone` - This creates copies of itself to handle the recursion
+- The magic happens when `clone(clone)` - the function applies itself to itself
+
+## Let's start with clone
+function clone(f) {
+    return f; 
+}
+
+fuction clone(f) {
+    return clone;
+}
+
+// is this a lambda representation of
+clone => clone 
+// this?
+function identity(clone) {
+    return clone; 
+}
+
+// is this a lambda representation of
+clone => clone(clone)
+// this?
+fuction selfApply(clone) {
+    return clone(clone);
+}
+
+
+
+## How It Works
+
+The Y-combinator takes your blueprint and transforms it into a recursive function. Here's what happens:
+
+1. You give it your blueprint
+2. It creates a special `clone` function
+3. The clone applies itself to itself: `clone(clone)`
+4. This creates the recursive behavior your blueprint needs
+
+## A Simple Blueprint Example
+
+Let's say you have a blueprint that looks like this:
+
+```javascript
+const blueprint = recursiveCall => n => {
+  if (n === 0) {
+    return "stop!";
+  } else {
+    return recursiveCall(n - 1);
+  }
+}
+```
+
+This blueprint has two key parts:
+- **Stop condition**: `if (n === 0) return "stop!"`
+- **Recursive call**: `recursiveCall(n - 1)`
+
+Notice that the blueprint doesn't know how to call itself - it just expects someone to give it a `recursiveCall` function.
+
+## Building Up the Intuition
+
+Let's understand why `(clone => blueprint(clone(clone)))` actually creates recursion:
+
+**Step 1:** We start with just calling our blueprint
+```javascript
+blueprint()  // ❌ Fails! Blueprint expects a recursive function parameter
+```
+
+**Step 2:** So we try to give it something to call
+```javascript
+blueprint(???)  // But what goes here?
+```
+
+**Step 3:** Let's wrap it in a function that calls blueprint
+```javascript
+clone => blueprint(clone)
+```
+Now `clone` is a function that, when called, will call `blueprint` with whatever we pass to it.
+
+**Step 4:** But we need to actually use this clone. The key insight: pass the clone to itself!
+```javascript
+(clone => blueprint(clone))(clone => blueprint(clone))
+```
+
+**Step 5:** This creates recursion! When `blueprint` makes its recursive call, it calls `clone`, which calls `blueprint` again, which can call `clone` again...
+
+**Step 6:** We can optimize by making the clone call itself directly:
+```javascript
+(clone => blueprint(clone(clone)))(clone => blueprint(clone(clone)))
+```
+
+## Putting It Together
+
+When you feed your blueprint to the Y-combinator:
+
+```javascript
+const recursiveFunction = Y(blueprint);
+console.log(recursiveFunction(3)); // "stop!"
+```
+
+The Y-combinator works its magic:
+
+1. It takes your blueprint
+2. Creates the clone mechanism
+3. The clone provides itself as the `recursiveCall` parameter
+4. Now your blueprint can recurse!
+
+## A Complete Example
+
+```javascript
+// Our Y-combinator
+const Y = blueprint => 
+  (clone => blueprint(clone(clone)))
+  (clone => blueprint(clone(clone)));
+
+// A simple blueprint that counts down
+const countdownBlueprint = recursiveCall => n => {
+  if (n === 0) {
+    return "Done!";
+  } else {
+    console.log(n);
+    return recursiveCall(n - 1);
+  }
+};
+
+// Make it recursive
+const countdown = Y(countdownBlueprint);
+
+// Use it!
+countdown(5);
+// Prints: 5, 4, 3, 2, 1, "Done!"
+```
+
+## Why This Matters
+
+The Y-combinator shows us something profound: recursion isn't built into functions themselves. Instead, it's a pattern we can apply to any blueprint. Any function that has:
+
+1. A stop condition
+2. A place where it would call itself
+
+Can be made recursive using this technique.
+
+## The Key Insight
+
+The genius of `(clone => blueprint(clone(clone)))(clone => blueprint(clone(clone)))` is that it solves the chicken-and-egg problem of recursion. Your blueprint needs to call itself, but it doesn't exist yet! The Y-combinator creates a way for the function to reference itself during its own creation.
+
+This is why functional programming is so powerful - even fundamental concepts like recursion can be expressed as simple, composable functions.
+
+
+## Why do we even need such a representation?  
+Because we want to show how all of computation can be expressed without variables, assignment, or named functions — in a completely minimal and self-contained way. This is essentially what ``lambda-calculus`` or `` λ-calculus`` does.
+
+## Calculus?
+The word `calculus` comes from the Latin `calculus`, meaning a small stone used for counting, which itself comes from `calx` (pebble or limestone). In ancient times, people used small stones to perform arithmetic — a kind of primitive calculator. So `calculus` is a system or method of calculation. 
+
+## λ-calculus?
+The λ symbol was chosen by Alonzo Church in the 1930s when he invented lambda calculus. According to Church himself, he originally wanted to use a notation like:
+
+`x̂.M` - x hat dot M
+
+to mean "the function of x that gives M". But this was typographically difficult, so he moved the hat:
+ 
+`∧x.M` - caret x dot M
+
+But typesetters kept confusing the caret (∧) with lambda (λ), so Church just gave up and adopted lambda officially.
+
+
+
+## What are free variables?
+A free variable is a variable that isn't bound to any parameter in the function. 
+
+`λx. x`  x is bound
+`λx.λy x + y` x and y are both bound
+`λx.λy x + y + z` z is free, it is not bound to any parameter and is presumably defined elsewhere. 
+
+## What's a combinator?
+A combinator is a function with no free variables i.e. only a variable that is defined as a parameter may be used within the function. This way we remove the requirement for the system to have a global memory to keep track of free variables. Whatever the function needs, needs to be supplied as a parameter. This was the objective of λ-functions if you recall. To be self-contained. More tersely,
+
+`A combinator is a self-contained lambda expression.` 
+
+## What's the `Y` in Y-combinator?
+Curry introduced different combinators and chose single letters for each of them. He chose `Y` for this specific one. It has no other relevance.
+
+
+## What's the fixed-point of a function?
+A fixed-point of a function is where for an input value, say, `x`, the function returns `x` i.e.
+
+`f(x) = x`
+
+Since the input and output are the same, we can keep doing this and never really see any change in the system.
+`f(f(f(x))) = x`
+
+Here's a fun example:
+
+No matter what real number you start with (in radians), repeatedly applying cos(x) tends to converge to the same fixed point:
+
+`cos(cos(cos(...cos(x)...))) → 0.739085...`
+
+This strange attractor is called the `Dottie number`, and people have tattoos of it.
+
+
+<!-- # The Y-Combinator: Making Any Function Recursive
+
+Imagine you have a blueprint for a function, but there's one problem: it can't call itself. How do you make it recursive? That's where the Y-combinator comes in! -->
+
+<!-- Before we begin, let's get into some λ-calculus.
+
+## Show me some λ-calculus
 It's actually a simple notation to represent functions.
-```
-λx.x+1
-```
-here ```λx``` is the lambda function with parameter x. Everything after the dot is the body of the function. In this case, it's ```x+1```, so this is a function that adds 1 to its parameter x. In python we would say:
+
+`λx. x + 1`
+
+here `λx` is the lambda function with parameter x. Everything after the dot is the body of the function. In this case, it's `x+1`, so this is a function that adds 1 to its parameter x. In python we would say:
 
 ```python
 lambda x:x+1 
@@ -22,196 +235,11 @@ lambda x:x+1
 
 It's not a massive coincidence that the python version looks a lot like the λ-calculus version. It was inspired by it.
 
-## What is the Y-combinator
-
-λ-calculus, for the sake of mathematical purity and reductionism, says we don't need the complexity of naming functions. We can pass unnamed functions around as values instead and get the job done. Sounds exhausting, but ok, I'll bite. One problem of not using named functions is that we can't do recursion the way we know how - which is simply calling the function by it's name within the function. That's a mouthful so let's look at code. 
-
-I present a derivation using notation that resembles λ-calculus inspired pseudocode, with corresponding Python code for each step:
-
-## Deriving it
-
-## Step 1: Basic Named Recursion
-```
-factorial = λn. if (n ≤ 1) then 1 else n × factorial(n-1)
-```
-This isn't  λ-calculus because we use `factorial(n-1)` which we wouldn't be able to do if the function didn't have a name. 
+Let's get adventurous and try TWO variables.
+`λx.λy. x + y`
 
 ```python
-def factorial(n):
-    if n <= 1:
-        return 1
-    return n * factorial(n - 1) 
+lambda x, y: x + y
 ```
 
-The above shouldn't surprise you at all. This is the standard way we do things in most any language. Since `factorial` calls `factorial` we call it self-referencing.
-
-## Step 2: Extract Self-Reference as Parameter
-
-Let's try and get rid of the names. The inner-call to factorial(n-1) needn't use a name if we just passed the factorial function as a parameter. So we introduce a new parameter f, and use that within the function.
-
-```
-λ(f, n). if (n ≤ 1) then 1 else n × f(f, n-1)
-```
-
-```python
-factorial = (lambda f, n: 1 if n <= 1 else n * f(f, n - 1))
-```
-
-```python
-# We would run it like so:
-print(factorial(factorial, 5))  # Output: 120
-```
-
-This is still cheating because we are still using `factorial` to activate the function. Give us one more step and we'll fix that. I could do it now, but I want to do one teeny-tiny thing before we go gung-ho on copy-pasta. 
-
-## Step 3: Curry the Function (Separate f from n)
-I like how our function is turning out, but our commitment to purity and generality denies us the permission to ignore the fact that a single parameter ```n``` is only relevant for factorials. Other functions might need different number of parameters, or, blow-our-minds none. 
-
-I want you to notice this bit in the above function:
-```f(f, n-1)```
-
-This call to the function f is doing two things. If n <=1 it returns a value. Otherwise it binds f to the parameter (n-1) and returns a function that multiplies n and f(n-1). We will split these responsibilities. 
-
-```
-factorial = λf. λn. if (n ≤ 1) then 1 else n × f(f)(n-1)
-```
-
-```python
-factorial = lambda f: lambda n: 1 if n <= 1 else n * f(f)(n - 1)
-```
-The outer f merely passes on the value of f to the inner lambda. 
-
-What in heaven's name is f(f)?! Makes my head hurt. What's it supposed to be doing? Isn't f(n-1) enough? 
-
-Interestingly, currying was actually first observed by Moses Schönfinkel in the 1920s, but it got named after Curry who developed it further. Some people call it "Schönfinkelization" but "currying" stuck.
-
-## Step 4: Make Self-Application Explicit
-```
--- This is f(f) expanded:
-(λf. λn. if (n ≤ 1) then 1 else n × f(f)(n-1))
-(λf. λn. if (n ≤ 1) then 1 else n × f(f)(n-1))
-(n)
-```
-
-```python
-# Inline the self-application - same function applied to itself
-result = (lambda f: lambda n: 1 if n <= 1 else n * f(f)(n - 1))(
-         (lambda f: lambda n: 1 if n <= 1 else n * f(f)(n - 1))
-)(5)
-print(result)  # 120
-```
-
-## Step 5: Clean up the pattern. f(f)? Nope.
-factorial = λrec. λn. if (n ≤ 1) then 1 else n × rec(n-1)
-
-rec = lambda f:f(f)
-factorial(rec(f), 5)
-
-## Step 6: Abstract the Pattern - Extract the Template
-
-This is what a single step would look like. What is rec here? If you look at the function above, rec is a function that calls f(f). What's the point of that? It creates a copy of itself and then binds it to (n-1). Wouldn't that result in recursion? With lazy evaluation no. With eager evaluation, yes but it would be infinite recursion. Note that rec does not pass a copy of itself so it's not recursion. The copy of the function is created in the parent Y combinator. F could technically call f(f) by itself and we wouldn't need an external combinator then. We did this in the previous version.
-
-```
-F = λrec. λn. if (n ≤ 1) then 1 else n × rec(n-1)
-```
-
-```python
-# Extract the factorial template - takes a "recursive function" parameter
-
-F = lambda rec: (lambda n: 1 if n <= 1 else n * rec(n - 1))
-
-# We want: factorial = F(factorial)
-# But we need to construct this without named recursion...
-```
-
-## Step 6: The Y Combinator Pattern (Eager - Will Stack Overflow)
-```
-Y = λf. (λx. f(x(x)))(λx. f(x(x)))
-```
-
-```python
-# This will cause infinite recursion in Python due to eager evaluation
-
-
-def Y_eager(f):
-    return (lambda x: f(x(x)))(lambda x: f(x(x)))
-
-
-# Don't run this - it will crash!
-# factorial = Y_eager(F)
-```
-
-## Step 7: The Y Combinator with Lazy Evaluation
-```
-Y = λf. (λx. f(λy. x(x)(y)))(λx. f(λy. x(x)(y)))
-```
-
-```python
-# Need lambda for lazy evaluation - delay x(x) until actually called
-
-
-def Y(f):
-    return (lambda x: f(lambda y: x(x)(y)))(lambda x: f(lambda y: x(x)(y)))
-
-
-# Now we can create factorial using the Y combinator
-factorial = Y(F)
-print(factorial(5))  # 120
-
-# Or more concisely with inline template:
-factorial_inline = Y(lambda rec: lambda n: 1 if n <= 1 else n * rec(n - 1))
-print(factorial_inline(5))  # 120
-```
-
-## The final analysis
-
-<span style="font-size:25px"><span style="color:rgb(255, 183, 1)">Y</span> = <span style="color:green">λf</span>. <span style="background-color:rgb(249, 240, 118)">(<span style="color: rgb(255, 106, 37)">λx</span>. <span style="color:green">f</span> (<span style="color: rgb(255, 106, 37)">x</span>(<span style="color: rgb(255, 106, 37)">x</span>)))<span style="vertical-align: -0.8em; font-size: 20px;">definition</span></span><span style="background-color:rgb(161, 249, 98)">(<span style="color: rgb(255, 106, 37)">λx</span>. <span style="color:green">f</span> (<span style="color: rgb(255, 106, 37)">x</span> (<span style="color: rgb(255, 106, 37)">x</span>)))<span style="vertical-align: -0.8em; font-size: 20px;">activation</span></span><span style="color:grey; font-size:0.5em">(p1, p2...)</span></span>
-
-
-<span style="color: rgb(255, 106, 37)">x</span> (<span style="color: rgb(255, 106, 37)">x</span>) returns a function that either calls f(x(x)) or returns a value and terminates the recursion</span>
-```text
-If we define
-F => (rec) => (n) => if n < 2 then 1 else rec(n - 1)
-
-as a recursive step, then
-Y(F) = (F(rec))(F(rec))
-
-Assuming F(rec) = (λx. f (x x))
-Y f
-= X X
-= (λx. f (x x)) (λx. f (x x))
-
-Let’s β-reduce:
-= f ((λx. f (x x)) (λx. f (x x)))
-
-But wait — that inner expression is X X again, i.e., Y f.
-= f (X X)
-= f (Y f)
-
-Therefore:
-Y f = f (Y f)
-```
-
-## Key Python Notes:
-
-1. ** Lazy Evaluation**: Python evaluates arguments eagerly, so we need `lambda y: x(x)(y)` instead of just `x(x)` to delay the recursive call until it's actually needed.
-
-2. ** Lambda Necessity**: In steps 4, 6, and 7, we must use lambdas because we need anonymous functions that can reference themselves through the closure mechanism.
-
-3. ** Stack Overflow**: The "eager" Y combinator in Step 6 would cause immediate infinite recursion in Python, just like it did in your JavaScript example.
-
-The progression shows how we systematically eliminate named recursion and replace it with pure function application and higher-order functions, culminating in the Y combinator that "bootstraps" recursion from nothing but function composition.
-
-## Why λ? 
-The λ symbol was chosen by Alonzo Church in the 1930s when he invented lambda calculus. According to Church himself, he originally wanted to use a notation like:
-
-```x̂.M  (x-hat dot M)```
-
-to mean "the function of x that gives M". But this was typographically difficult, so he moved the hat:
-
-```∧x.M  (caret x dot M)```
-
-But typesetters kept confusing the caret (∧) with lambda (λ), so Church just gave up and adopted lambda officially!
-
-
-Y = λf. (λx. f (x x)) (λx. f (x x))
+This should be enough notation for now. Let's talk about free variables and then we can discuss combinators.  -->
