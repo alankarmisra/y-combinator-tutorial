@@ -4,7 +4,212 @@ title: "The Y-combinator"
 
 # The Y-Combinator: Making Any Function Recursive
 
-Imagine you have a blueprint for a function, but there's one problem: it can't call itself. How do you make it recursive? That's where the Y-combinator comes in!
+
+
+**That's what I thought. Ok, keep going.**
+
+Ok, let's define this rewrite this function with a constraint. You can't name the function. It has to be anonymous. 
+
+**Wut? why?**
+
+For that we have to get into lambda calculus. It's not as complicated as it sounds and we will get into it in a bit. But for now, _just trust me bro._
+
+**NEVER say that again. Additional constraint accepted. Continue.**
+
+Sorry. Okay, so if we’re not allowed to name the function, we can’t refer to it by name inside its own body — which normally is how recursion works.
+
+But instead of calling itself by name, the function can receive itself as a parameter. That way, it doesn’t need to know its name — it just calls the parameter.
+
+We can still store this anonymous function in a variable so we have a way to kick it off.
+
+```javascript
+const countdown_r = (f, n) => {
+    console.log(n);
+    if (n > 0) {
+        f(f, n - 1); // Recurse by passing itself as the first parameter
+    }
+};
+```
+
+And we can kick it off by passing the function to itself along with the starting number.
+```javascript
+countdown_r(countdown_r, 3);
+```
+
+Looks odd.
+But does the job.
+
+**Looks great, problem solved. You're a poet.**
+
+Except... countdown_r is still a variable with a name.
+
+**And?**
+
+Let's add another constraint.
+
+**Let me guess. No variable names.**
+
+Yep.
+
+**Sensing a pattern here. Are you allergic to names? Oh wait! Is that why it's called LAMBDA calculus! Cause there's no names???**
+
+You got it!
+
+**Dang! Accomplishment unlocked. OK, OK...maybe we can just run the function as soon as we define it? Then we don't have to store it in a variable name?**
+
+That should work. Let's try it.
+
+First we define the function as we did before.
+
+```javascript
+(f, n) => {
+    console.log(n);
+    if (n > 0) {
+        f(f, n - 1); 
+    }
+}
+```
+
+Next, we need to _call_ it. Since it’s an anonymous function, we wrap it in parentheses and invoke it:
+
+```javascript
+((f, n) => {
+    console.log(n);
+    if (n > 0) {
+        f(f, n - 1); 
+    }
+})(/* What goes here? We can’t reference the function we just defined! */, 3);
+```
+
+Any ideas on how we can reference the function?
+
+**Right — no name means no way to refer to it from the outside. So… we do the obvious (?) thing: copy-paste the whole function as the first argument? Am I terrible for suggesting that?**
+
+Actually you're exactly right. This works.
+
+```javascript
+((f, n) => {
+    console.log(n);
+    if (n > 0) {
+        f(f, n - 1); 
+    }
+})((f, n) => {
+    console.log(n);
+    if (n > 0) {
+        f(f, n - 1); 
+    }
+}, 3);
+```
+
+And this will give us the same output. 
+
+**That looks super weird. But I get it. So we're done yeah?**
+
+Yes and no. This works great for a function with a single parameter. But what if we want to generalize it to 3, 4, 5, or indeed n parameters? Or even have no parameters? And any function? 
+
+**Like something that takes any function and then allows it to be recursive?**
+
+Yes. Which is what a Y-combinator is by the way.
+
+**Y-what?**
+
+We'll get to that. First let's look at what our exisiting function is doing and unpack it. We'll only focus on the function definition and ignore the copy-pasta required to call the function with parameters.
+
+```javascript
+(f, n) => {
+    console.log(n);
+    if (n > 0) {
+        f(f, n - 1); 
+    }
+    // Function terminates here because n <= 0, i.e some stop condition is met. 
+}
+```
+
+So this function accepts two arguments:
+* f, which is a reference to itself,
+* and n, the input value we’re counting down from.
+
+It uses f(f, n - 1) to recurse.
+
+But here’s the problem:
+This only works because we’ve structured our countdown function to expect that weird f(f, x) shape.
+
+What if we want to keep the logic of countdown separate from that recursion trick?
+
+What if instead of writing our logic like:
+```javascript
+(f, n) => { ... }
+```
+
+we wrote a function that takes f and returns another function that takes n?
+```javascript
+f => n => {
+    console.log(n);
+    if (n > 0) {
+        f(f)(n - 1);
+    }
+}
+```
+
+Now we’ve separated the idea of “making something recursive” from the actual input the function works on.
+That’s powerful.
+
+Because now we can start to see how to generalize this to any function — regardless of the number of parameters.
+
+**Whoa. So instead of f(f, n - 1), we’re doing f(f)(n - 1)?**
+Exactly.
+
+Let’s zoom in on this form:
+```javascript
+f => n => {
+    console.log(n);
+    if (n > 0) {
+        f(f)(n - 1);
+    }
+}
+```
+
+What we’ve done is wrap the function so it returns another function. The first f is still a reference to “itself”, but now we separate the recursion logic from the input handling.
+
+This lets us isolate what makes the function recursive from what the function actually does.
+
+So now we can write the countdown logic by itself, and plug in the recursive part separately?
+
+Exactly. Let’s take the next step and extract the countdown logic into its own function. But we’ll write it so it expects a function it can call recursively — we’ll call it recur.
+```javascript
+const countdownLogic = recur => n => {
+    console.log(n);
+    if (n > 0) {
+        recur(n - 1);
+    }
+};
+```
+
+Now countdownLogic is just a function that takes a recursive function and returns the countdown behavior.
+
+**Okay, but where does the recursion come from now?**
+
+We can build a little function — let’s call it mockY for now — that takes this logic and makes it recursive by passing in a version of itself.
+
+const mockY = f => (x => f(y => x(x)(y)))(x => f(y => x(x)(y)));
+
+**WHOA WHOA WHOA.**
+Yeah, I know.
+But let’s not worry about understanding that just yet.
+Let’s just try using it:
+
+```javascript
+const countdown = mockY(countdownLogic);
+countdown(3);
+```
+
+Boom. Recursion, no names, totally generalized.
+
+**So that weird mockY thing is the… Y-combinator?**
+
+You’re looking at it.
+
+And that’s where we’re headed next.
 
 ## The Magic Formula
 
