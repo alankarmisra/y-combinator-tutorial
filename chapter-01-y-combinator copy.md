@@ -227,3 +227,65 @@ The `.` indicates that the function body follows next.
 
 **Ok I see it. It looks more or less like JS with a lot less syntax.**
 Absolutely. That's the beauty of it. It's minimalist.
+
+
+**Why do we even need such a representation?** 
+Because we want to show how all of computation can be expressed without variables, assignment, or named functions — in a completely minimal and self-contained way. This is essentially what ``lambda-calculus`` or `` λ-calculus`` does.
+
+**Calculus?**
+The word `calculus` comes from the Latin `calculus`, meaning a small stone used for counting, which itself comes from `calx` (pebble or limestone). In ancient times, people used small stones to perform arithmetic — a kind of primitive calculator. So `calculus` is a system or method of calculation. 
+
+**λ-calculus**
+The λ symbol was chosen by Alonzo Church in the 1930s when he invented lambda calculus. According to Church himself, he originally wanted to use a notation like:
+
+`x̂.M` - x hat dot M
+
+to mean "the function of x that gives M". But this was typographically difficult, so he moved the hat:
+ 
+`∧x.M` - caret x dot M
+
+But typesetters kept confusing the caret (∧) with lambda (λ), so Church just gave up and adopted lambda officially.
+
+**What are free variables?**
+A free variable is a variable that isn't bound to any parameter in the function. 
+
+`λx. x`  x is bound
+`λx.λy x + y` x and y are both bound
+`λx.λy x + y + z` z is free, it is not bound to any parameter and is presumably defined elsewhere. 
+
+**What's a combinator?**
+A combinator is a function with no free variables i.e. only a variable that is defined as a parameter may be used within the function. This way we remove the requirement for the system to have a global memory to keep track of free variables. Whatever the function needs, needs to be supplied as a parameter. This was the objective of λ-functions if you recall. To be self-contained. More tersely,
+
+`A combinator is a self-contained lambda expression.` 
+
+**What's the `Y` in Y-combinator?**
+Curry introduced different combinators and chose single letters for each of them. He chose `Y` for this specific one. It has no other relevance.
+
+
+**What's the fixed-point of a function?**
+A fixed-point of a function is where for an input value, say, `x`, the function returns `x` i.e.
+
+`f(x) = x`
+
+Since the input and output are the same, we can keep doing this and never really see any change in the system.
+`f(f(f(x))) = x`
+
+Here's a fun example:
+
+No matter what real number you start with (in radians), repeatedly applying cos(x) tends to converge to the same fixed point:
+
+`cos(cos(cos(...cos(x)...))) → 0.739085...`
+
+This strange attractor is called the `Dottie number`, and people have tattoos of it.
+
+## The Magic Formula
+
+```javascript
+const Y = blueprint => 
+  (clone => blueprint(clone(clone)))
+  (clone => blueprint(clone(clone)))
+```
+
+- `blueprint` - This is ANY function you want to make recursive
+- `clone` - This creates copies of itself to handle the recursion
+- The magic happens when `clone(clone)` - the function applies itself to itself

@@ -4,8 +4,6 @@ title: "The Y-combinator"
 
 # The Y-Combinator: Making Any Function Recursive
 
-
-
 **That's what I thought. Ok, keep going.**
 
 Ok, let's define this rewrite this function with a constraint. You can't name the function. It has to be anonymous. 
@@ -419,32 +417,3 @@ No matter what real number you start with (in radians), repeatedly applying cos(
 `cos(cos(cos(...cos(x)...))) → 0.739085...`
 
 This strange attractor is called the `Dottie number`, and people have tattoos of it.
-
-
-<!-- # The Y-Combinator: Making Any Function Recursive
-
-Imagine you have a blueprint for a function, but there's one problem: it can't call itself. How do you make it recursive? That's where the Y-combinator comes in! -->
-
-<!-- Before we begin, let's get into some λ-calculus.
-
-## Show me some λ-calculus
-It's actually a simple notation to represent functions.
-
-`λx. x + 1`
-
-here `λx` is the lambda function with parameter x. Everything after the dot is the body of the function. In this case, it's `x+1`, so this is a function that adds 1 to its parameter x. In python we would say:
-
-```python
-lambda x:x+1 
-```
-
-It's not a massive coincidence that the python version looks a lot like the λ-calculus version. It was inspired by it.
-
-Let's get adventurous and try TWO variables.
-`λx.λy. x + y`
-
-```python
-lambda x, y: x + y
-```
-
-This should be enough notation for now. Let's talk about free variables and then we can discuss combinators.  -->
